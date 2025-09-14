@@ -48,6 +48,34 @@ The test will check both PostgreSQL and Supabase connections and provide a summa
 #### Sign Up
 Create a new user account with either ADMIN or ALUMNI role.
 
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| displayName | String | Yes | User's full name |
+| email | String | Yes | User's email address |
+| phone | String | Yes | User's phone number |
+| password | String | Yes | User's password |
+| role | String | Yes | User role (ADMIN or ALUMNI) |
+| course | String | If ALUMNI | Course completed by the alumni |
+| stream | String | If ALUMNI | Stream of study |
+| occupation | String | If ALUMNI | Current occupation |
+| yearOfGraduation | Number | If ALUMNI | Year of graduation |
+| socialLinks | Array | No | Array of social media links (ALUMNI only) |
+
+**socialLinks Array Items:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| alumni_link | String | Yes | URL of the social media profile |
+| alumni_link_name | String | Yes | Must be one of: `LINKEDIN`, `GITHUB`, `FACEBOOK`, `INSTAGRAM`, `REDDIT`, `OTHER` |
+
+**Important Notes:**
+- Maximum of 5 social links allowed per user
+- Social links are case-insensitive when validating but will be stored in UPPERCASE
+- `alumni_link_name` must match one of the allowed values exactly (case-insensitive)
+- You can ignore adding links too if not present. 
+
 **Endpoint:** `POST /api/user/signup`
 
 **Request Body (ADMIN):**
@@ -72,7 +100,17 @@ Create a new user account with either ADMIN or ALUMNI role.
   "course": "B.Tech",
   "stream": "Computer Science",
   "occupation": "Software Engineer",
-  "yearOfGraduation": "2020"
+  "yearOfGraduation": "2020",
+  "socialLinks": [
+    {
+      "alumni_link": "<URL>",
+      "alumni_link_name": "<Platform Name>"
+    },
+    {
+      "alumni_link": "<URL>",
+      "alumni_link_name": "<Platform Name>"
+    }
+  ]
 }
 ```
 
@@ -88,7 +126,17 @@ Create a new user account with either ADMIN or ALUMNI role.
     "course": "B.Tech",
     "stream": "Computer Science",
     "occupation": "Software Engineer",
-    "yearOfGraduation": "2020"
+    "yearOfGraduation": "2020",
+    "socialLinks": [
+      {
+        "alumni_link": "https://linkedin.com/in/username",
+        "alumni_link_name": "LINKEDIN"
+      },
+      {
+        "alumni_link": "https://github.com/username",
+        "alumni_link_name": "GITHUB"
+      }
+    ]
   }
 }
 ```

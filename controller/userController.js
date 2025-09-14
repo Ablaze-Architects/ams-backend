@@ -3,7 +3,7 @@ const { supabase, supabaseAdmin } = require('../config/supabase');
 
 const signup = async (req, res) => {
   try {
-    const { displayName, email, phone, password, role, ...additionalData } = req.body;
+    const { displayName, email, phone, password, role, socialLinks = [], ...additionalData } = req.body;
 
     // Validate required fields
     if (!displayName || !email || !phone || !password || !role) {
@@ -22,16 +22,59 @@ const signup = async (req, res) => {
     }
 
     // Validate additional fields for ALUMNI
-    if (role === 'ALUMNI' && (
-      !additionalData.course || 
-      !additionalData.stream || 
-      !additionalData.occupation || 
-      !additionalData.yearOfGraduation
-    )) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required alumni fields: course, stream, occupation, yearOfGraduation' 
-      });
+    if (role === 'ALUMNI') {
+      // Validate required alumni fields
+      if (!additionalData.course || 
+          !additionalData.stream || 
+          !additionalData.occupation || 
+          !additionalData.yearOfGraduation) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Missing required alumni fields: course, stream, occupation, yearOfGraduation' 
+        });
+      }
+
+      // Define allowed social media platforms based on database enum
+      const ALLOWED_SOCIAL_PLATFORMS = [
+        'LINKEDIN',
+        'GITHUB',
+        'FACEBOOK',
+        'INSTAGRAM',
+        'REDDIT',
+        'OTHER'
+      ];
+
+      // Validate social links if provided
+      if (socialLinks && socialLinks.length > 0) {
+        // Check for invalid platforms first
+        const invalidLinks = socialLinks.filter(
+          link => link.alumni_link_name && 
+                 !ALLOWED_SOCIAL_PLATFORMS.includes(link.alumni_link_name.toUpperCase())
+        );
+        
+        if (invalidLinks.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid social platform(s): ${invalidLinks.map(l => l.alumni_link_name).join(', ')}. ` +
+                     `Allowed values are: ${ALLOWED_SOCIAL_PLATFORMS.join(', ')}`
+          });
+        }
+        
+        // Filter out any invalid links (missing either link or name)
+        const validSocialLinks = socialLinks.filter(link => link.alumni_link && link.alumni_link_name);
+        
+        // Update socialLinks to only include valid ones
+        socialLinks.length = 0;
+        socialLinks.push(...validSocialLinks);
+        
+        // Check if number of valid social links exceeds 5
+        if (socialLinks.length > 5) {
+          return res.status(400).json({
+            success: false,
+            message: 'Maximum of 5 social links allowed'
+          });
+        }
+      }
     }
 
     // First create the user with email confirmation disabled
@@ -84,6 +127,37 @@ const signup = async (req, res) => {
     if (dbError) {
       console.error('Database error:', dbError);
       throw dbError;
+    }
+
+    // Insert social links for alumni if any valid links are provided
+    if (role === 'ALUMNI' && socialLinks && socialLinks.length > 0) {
+      try {
+        console.log('Processing social links:', JSON.stringify(socialLinks, null, 2));
+        
+        const socialLinksData = socialLinks.map(link => ({
+          alumni_id: user.id,
+          alumni_link: link.alumni_link,
+          // Convert to uppercase to match enum values in the database
+          alumni_link_name: link.alumni_link_name.toUpperCase()
+        }));
+
+        console.log('Prepared social links data for DB:', JSON.stringify(socialLinksData, null, 2));
+        
+        const { data: insertedLinks, error: linksError } = await supabase
+          .from('alumni_social_links')
+          .insert(socialLinksData)
+          .select();
+
+        if (linksError) {
+          console.error('Error saving social links:', linksError);
+          // Continue execution even if social links fail to save
+        } else {
+          console.log('Successfully saved social links:', JSON.stringify(insertedLinks, null, 2));
+        }
+      } catch (error) {
+        console.error('Unexpected error processing social links:', error);
+        // Continue with user creation even if social links fail
+      }
     }
 
     res.status(201).json({
