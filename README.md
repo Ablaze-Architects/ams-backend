@@ -7,6 +7,7 @@
 - [API Documentation](#api-documentation)
   - [User Authentication](#user-authentication)
     - [Sign Up (`POST /api/user/signup`)](#sign-up)
+    - [Login (`POST /api/user/login`)](#login)
 
 ## Database Connections
 
@@ -107,3 +108,65 @@ Create a new user account with either ADMIN or ALUMNI role.
   "message": "Internal server error"
 }
 ```
+
+#### Login
+Authenticate a user and retrieve their profile information.
+
+**Endpoint:** `POST /api/user/login`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "userPassword123!"
+}
+```
+
+**Response (Success - 200 OK):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "user": {
+    "id": "user-uuid-here",
+    "email": "user@example.com",
+    "role": "ALUMNI",
+    "alumni_name": "John Doe",
+    "alumni_email": "user@example.com",
+    "alumni_phone_no": "1234567890",
+    "alumni_course": "B.Tech",
+    "alumni_stream": "Computer Science",
+    "alumni_occupation": "Software Engineer",
+    "alumni_year_of_graduation": 2020,
+    "metadata": {
+      "display_name": "John Doe",
+      "phone": "1234567890"
+    }
+  }
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "success": false,
+  "message": "Email and password are required"
+}
+```
+
+**Error Response (401 Unauthorized):**
+```json
+{
+  "success": false,
+  "message": "Invalid email or password"
+}
+```
+
+**Error Response (500 Internal Server Error):**
+```json
+{
+  "success": false,
+  "message": "An error occurred during login"
+}
+```
+

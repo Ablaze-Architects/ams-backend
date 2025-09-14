@@ -1,5 +1,5 @@
-const supabase = require('../config/supabase');
 const { v4: uuidv4 } = require('uuid');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 
 const signup = async (req, res) => {
   try {
@@ -34,16 +34,15 @@ const signup = async (req, res) => {
       });
     }
 
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // First create the user with email confirmation disabled
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          display_name: displayName,
-          phone,
-          role
-        }
+      email_confirm: true, // Auto-confirm the email
+      user_metadata: {
+        display_name: displayName,
+        phone,
+        role
       }
     });
 
@@ -113,6 +112,97 @@ const signup = async (req, res) => {
   }
 };
 
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and password are required' 
+      });
+    }
+
+    // Authenticate user with Supabase using the regular client
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error('Login error:', error);
+      
+      if (error.message === 'Email not confirmed') {
+        return res.status(403).json({
+          success: false,
+          message: 'Please verify your email before logging in. Check your inbox for the verification link.'
+        });
+      }
+      
+      return res.status(401).json({
+        success: false,
+        message: error.message || 'Invalid email or password',
+      });
+    }
+
+    // Get additional user data based on role
+    const { user } = data;
+    const role = user.user_metadata?.role || 'ALUMNI';
+    const tableName = role === 'ADMIN' ? 'admins' : 'alumni';
+    const idField = role === 'ADMIN' ? 'admin_id' : 'alumni_id';
+
+    const { data: userData, error: userError } = await supabase
+      .from(tableName)
+      .select('*')
+      .eq(idField, user.id)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      // Still return success since auth was successful
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          id: user.id,
+          email: user.email,
+          role,
+          metadata: user.user_metadata
+        }
+      });
+    }
+
+    // Combine auth and user data
+    const responseData = {
+      id: user.id,
+      email: user.email,
+      role,
+      ...userData,
+      metadata: user.user_metadata
+    };
+
+    // Remove sensitive fields
+    delete responseData.password;
+    delete responseData.encrypted_password;
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: responseData
+    });
+
+  } catch (error) {
+    console.error('Error in login:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
-  signup
+  signup,
+  login
 };
