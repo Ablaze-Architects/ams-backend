@@ -5,6 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'].forEach(key => {
   if (!process.env[key]) {
     console.error(`❌ Missing required environment variable: ${key}`);
+    process.exit(1);
   }
 });
 

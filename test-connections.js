@@ -1,5 +1,5 @@
 const pool = require('./config/db');
-const supabase = require('./config/supabase');
+const { supabase } = require('./config/supabase');
 
 async function testPostgreSQLConnection() {
   console.log('\nTesting PostgreSQL connection...');
