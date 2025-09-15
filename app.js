@@ -1,5 +1,13 @@
-const express = require('express');
-const cors = require('cors');
+import express from "express";
+import cors from "cors";
+import alumniRoutes from "./routes/alumniRoutes.js"; // ESM route
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+
+// Load CommonJS routes
+const userRoutes = require("./routes/userRoutes.js");
+
 const app = express();
 
 // Middleware
@@ -7,24 +15,25 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json({
-    status: 'running',
-    message: 'Alumni Management System API',
-    timestamp: new Date().toISOString()
+    status: "running",
+    message: "Alumni Management System API",
+    timestamp: new Date().toISOString(),
   });
 });
 
 // API Routes
-app.use('/api/user', require('./routes/userRoutes'));
+app.use("/api/user", userRoutes);     // <-- CommonJS
+app.use("/api/alumni", alumniRoutes); // <-- ESM
 
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     success: false,
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: "Internal Server Error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
@@ -32,8 +41,8 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Endpoint not found'
+    message: "Endpoint not found",
   });
 });
 
-module.exports = app;
+export default app;
