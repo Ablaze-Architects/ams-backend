@@ -8,6 +8,8 @@
   - [User Authentication](#user-authentication)
     - [Sign Up (`POST /api/user/signup`)](#sign-up)
     - [Login (`POST /api/user/login`)](#login)
+  - [Alumni](#alumni)
+    - [Get All Alumni (`GET /api/alumni`)](#get-all-alumni)
 
 ## Database Connections
 
@@ -218,3 +220,47 @@ Authenticate a user and retrieve their profile information.
 }
 ```
 
+### Alumni
+
+#### Get All Alumni
+Retrieve a list of all alumni with their social links.
+
+- **Endpoint**: `GET /api/alumni`
+- **Response**: 
+  - Status: 200 OK
+  - Body: Array of alumni objects with their social links
+  ```json
+  [
+    {
+    "alumni_id": "6bd83c54-9231-422c-905a-1f80daeecb9e",
+    "alumni_name": "John Doe",
+    "alumni_course": "Computer Science",
+    "alumni_stream": "B.Tech",
+    "alumni_occupation": "Software Engineer",
+    "alumni_year_of_graduation": "2020",
+    "alumni_profile_picture_key": null,
+    "alumni_email": "john.doe1212@example.com",
+    "alumni_phone_no": 1234567890,
+    "alumni_created_at": "2025-09-14T18:37:24.299292+00:00",
+    "alumni_updated_at": "2025-09-14T18:37:24.299292+00:00",
+    "social_links": [
+      {
+        "alumni_link": "https://linkedin.com/in/johndoe",
+        "alumni_link_name": "LINKEDIN"
+      },
+      {
+        "alumni_link": "https://github.com/johndoe",
+        "alumni_link_name": "GITHUB"
+      }
+    ]
+  }
+  ]
+  ```
+- **Error Responses**:
+  - 500: Server error
+  ```json
+  {
+    "success": false,
+    "message": "Server error fetching alumni"
+  }
+  ```
