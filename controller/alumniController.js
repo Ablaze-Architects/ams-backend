@@ -26,10 +26,7 @@ export const getAllAlumni = async (req, res) => {
       })
     );
 
-    res.status(200).json({
-      success: true,
-      data: alumniWithSocial,
-    });
+    res.status(200).json(alumniWithSocial);
   } catch (error) {
     console.error("❌ Error fetching alumni:", error.message);
     res.status(500).json({
