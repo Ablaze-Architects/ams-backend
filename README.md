@@ -8,6 +8,7 @@
   - [User Authentication](#user-authentication)
     - [Sign Up (`POST /api/user/signup`)](#sign-up)
     - [Login (`POST /api/user/login`)](#login)
+    - [Logout (`POST /api/user/:userId/logout`)](#logout)
   - [Alumni](#alumni)
     - [Get All Alumni (`GET /api/alumni`)](#get-all-alumni)
   - [Events](#events)
@@ -222,6 +223,32 @@ Authenticate a user and retrieve their profile information.
   "message": "An error occurred during login"
 }
 ```
+
+#### Logout
+Sign out the current user and invalidate the session.
+
+**Endpoint:** `POST /api/user/:userId/logout`
+
+**Headers:**
+- `Cookie`: Session cookie (automatically handled by Supabase)
+
+**Path Parameters:**
+- `userId` (required): ID of the user to log out
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Successfully logged out"
+}
+```
+
+**Error Responses:**
+- 401 Unauthorized: No active session found
+- 403 Forbidden: Not authorized to perform this action
+- 500 Internal Server Error: Error during logout
+
+---
 
 ### Alumni
 
