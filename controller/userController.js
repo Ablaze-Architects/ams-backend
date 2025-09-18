@@ -276,7 +276,60 @@ const login = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Get the current user's session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      return res.status(401).json({
+        success: false,
+        message: 'No active session found'
+      });
+    }
+    
+    // Verify the requesting user matches the session user
+    if (session.user.id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to perform this action'
+      });
+    }
+    
+    // Sign out the current user
+    const { error: signOutError } = await supabase.auth.signOut();
+    
+    if (signOutError) {
+      console.error('Error signing out:', signOutError);
+      return res.status(500).json({
+        success: false,
+        message: 'Error during logout',
+        error: signOutError.message
+      });
+    }
+
+    // You might want to perform additional cleanup here if needed
+    // For example, invalidating refresh tokens or session records
+
+    return res.status(200).json({
+      success: true,
+      message: 'Successfully logged out'
+    });
+
+  } catch (error) {
+    console.error('Logout error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error during logout',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   signup,
-  login
+  login,
+  logout
 };

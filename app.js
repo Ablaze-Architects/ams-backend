@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import alumniRoutes from "./routes/alumniRoutes.js"; // ESM route
+import eventRoutes from "./routes/eventRoutes.js"; // ESM route
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -26,6 +27,7 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/user", userRoutes);     // <-- CommonJS
 app.use("/api/alumni", alumniRoutes); // <-- ESM
+app.use("/api/events", eventRoutes);  // <-- ESM
 
 // Error handling
 app.use((err, req, res, next) => {

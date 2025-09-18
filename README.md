@@ -10,6 +10,9 @@
     - [Login (`POST /api/user/login`)](#login)
   - [Alumni](#alumni)
     - [Get All Alumni (`GET /api/alumni`)](#get-all-alumni)
+  - [Events](#events)
+    - [Create Event (`POST /api/events/:adminId/createEvent`)](#create-event)
+    - [Get All Events (`GET /api/events/:adminId/getAllEvents`)](#get-all-events)
 
 ## Database Connections
 
@@ -264,3 +267,117 @@ Retrieve a list of all alumni with their social links.
     "message": "Server error fetching alumni"
   }
   ```
+
+## Events
+
+### Create Event
+Create a new event in the system. Only accessible by authenticated admins.
+
+- **Endpoint**: `POST /api/events/:adminId/createEvent`
+- **Path Parameters**:
+  - `adminId` (required): ID of the admin creating the event
+- **Request Body**:
+  ```json
+  {
+    "event_name": "Annual Alumni Meet 2023",
+    "event_date_time": "2023-12-31T20:00:00.000Z",
+    "event_description": "Join us for the annual alumni meet and greet",
+    "event_poster_key": "events/posters/meet-2023.jpg"
+  }
+  ```
+- **Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Event created successfully",
+    "data": {
+      "event_id": "event-uuid-here",
+      "admin_id": "admin-uuid-here",
+      "event_name": "Annual Alumni Meet 2023",
+      "event_description": "Join us for the annual alumni meet and greet",
+      "event_poster_key": "events/posters/meet-2023.jpg",
+      "event_date_time": "2023-12-31T20:00:00.000Z",
+      "created_at": "2023-09-18T12:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - 400: Missing required fields
+  ```json
+  {
+    "success": false,
+    "message": "Event name and date/time are required"
+  }
+  ```
+  - 404: Admin not found
+  ```json
+  {
+    "success": false,
+    "message": "Admin not found or unauthorized"
+  }
+  ```
+  - 500: Server error
+  ```json
+  {
+    "success": false,
+    "message": "Server error while creating event"
+  }
+  ```
+
+### Get All Events
+Retrieve all events with admin details. Only accessible by authenticated admins.
+
+- **Endpoint**: `GET /api/events/:adminId/getAllEvents`
+- **Path Parameters**:
+  - `adminId` (required): ID of the admin making the request (used for authentication only)
+- **Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "count": 2,
+    "data": [
+      {
+        "event_id": "event-1-uuid",
+        "admin_id": "admin-1-uuid",
+        "admin_name": "Admin User",
+        "event_name": "Annual Alumni Meet 2023",
+        "event_description": "Join us for the annual alumni meet and greet",
+        "event_poster_key": "events/posters/meet-2023.jpg",
+        "event_date_time": "2023-12-31T20:00:00.000Z",
+        "created_at": "2023-09-18T12:00:00.000Z",
+        "updated_at": "2023-09-18T12:00:00.000Z"
+      },
+      {
+        "event_id": "event-2-uuid",
+        "admin_id": "admin-2-uuid",
+        "admin_name": "Another Admin",
+        "event_name": "Workshop on AI",
+        "event_description": "Learn about latest AI trends",
+        "event_poster_key": null,
+        "event_date_time": "2023-11-15T15:30:00.000Z",
+        "created_at": "2023-09-17T10:30:00.000Z",
+        "updated_at": "2023-09-17T10:30:00.000Z"
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - 404: Admin not found
+  ```json
+  {
+    "success": false,
+    "message": "Admin not found or unauthorized"
+  }
+  ```
+  - 500: Server error
+  ```json
+  {
+    "success": false,
+    "message": "Server error while fetching events"
+  }
+  ```
+
+**Notes**:
+- The `adminId` in the URL is only used for authentication, not for filtering events
+- All events from all admins are returned
+- The `admin_name` is joined from the admins table
