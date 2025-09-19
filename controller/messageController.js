@@ -7,7 +7,7 @@ import { supabase } from "../config/supabase.js";
  */
 export const createMessage = async (req, res) => {
   const { adminId } = req.params;
-  const { alumni_id, event_id, message, message_file_key } = req.body;
+  const { alumni_ids, event_id, message, message_file_key } = req.body;
 
   try {
     if (!message) {
@@ -17,18 +17,33 @@ export const createMessage = async (req, res) => {
       });
     }
 
-    // Insert into admin_alumni_messages
+    if (!alumni_ids || !Array.isArray(alumni_ids) || alumni_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one alumni_id is required",
+      });
+    }
+
+    if (!event_id) {
+      return res.status(400).json({
+        success: false,
+        message: "event_id is required",
+      });
+    }
+
+    // Prepare messages for all alumni
+    const messagesToInsert = alumni_ids.map(alumni_id => ({
+      admin_id: adminId,
+      alumni_id,
+      event_id,  // event_id is now required
+      message,
+      message_file_key: message_file_key || null
+    }));
+
+    // Insert all messages in a single batch
     const { data, error } = await supabase
       .from("admin_alumni_messages")
-      .insert([
-        {
-          admin_id: adminId,
-          alumni_id,
-          event_id,
-          message,
-          message_file_key,
-        },
-      ])
+      .insert(messagesToInsert)
       .select();
 
     if (error) throw error;
