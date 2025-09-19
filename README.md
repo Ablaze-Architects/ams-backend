@@ -14,6 +14,8 @@
   - [Events](#events)
     - [Create Event (`POST /api/events/:adminId/createEvent`)](#create-event)
     - [Get All Events (`GET /api/events/:adminId/getAllEvents`)](#get-all-events)
+  - [Messages](#messages)
+    - [Create Message (`POST /api/messages/:adminId/createMessage`)](#create-message)
 
 ## Database Connections
 
@@ -408,3 +410,80 @@ Retrieve all events with admin details. Only accessible by authenticated admins.
 - The `adminId` in the URL is only used for authentication, not for filtering events
 - All events from all admins are returned
 - The `admin_name` is joined from the admins table
+
+## Messages
+
+### Create Message
+Send a message to one or more alumni. Optionally associate with an event.
+
+**Endpoint:** `POST /api/messages/:adminId/createMessage`
+
+**Path Parameters:**
+- `adminId` (required): ID of the admin sending the message
+
+**Request Body:**
+```json
+{
+  "alumni_ids": ["alumni-uuid-1", "alumni-uuid-2"],
+  "event_id": 12345,
+  "message": "Hello! This is a test message.",
+  "message_file_key": "path/to/uploaded/file.pdf"
+}
+```
+- `alumni_ids` (required, array of UUIDs): Array of alumni IDs to receive the message
+- `event_id` (required, long): Numeric ID of the event this message is related to
+- `message` (required, string): The message content
+- `message_file_key` (optional, string): Path to an uploaded file if the message includes an attachment
+
+**Success Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Message created successfully",
+  "data": [
+    {
+      "id": "message-uuid-1",
+      "admin_id": "admin-uuid",
+      "alumni_id": "alumni-uuid-1",
+      "event_id": 12345,
+      "message": "Hello! This is a test message.",
+      "message_file_key": "path/to/uploaded/file.pdf",
+      "created_at": "2023-12-01T10:00:00.000Z"
+    },
+    {
+      "id": "message-uuid-2",
+      "admin_id": "admin-uuid",
+      "alumni_id": "alumni-uuid-2",
+      "event_id": 12345,
+      "message": "Hello! This is a test message.",
+      "message_file_key": "path/to/uploaded/file.pdf",
+      "created_at": "2023-12-01T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- 400: Missing required fields
+  ```json
+  {
+    "success": false,
+    "message": "Message content is required"
+  }
+  ```
+  OR
+  ```json
+  {
+    "success": false,
+    "message": "At least one alumni_id is required"
+  }
+  ```
+
+- 500: Internal server error
+  ```json
+  {
+    "success": false,
+    "message": "Internal Server Error",
+    "error": "Error details here"
+  }
+  ```
