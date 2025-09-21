@@ -2,9 +2,9 @@
 import { supabase } from "../config/supabase.js";
 
 /**
- * Create a message by an admin for alumni
- * POST /api/messages/:adminId/createMessage
- */
+//  * Create a message by an admin for alumni
+//  * POST /api/messages/:adminId/createMessage
+//  */
 export const createMessage = async (req, res) => {
   const { adminId } = req.params;
   const { alumni_ids, event_id, message, message_file_key } = req.body;
@@ -59,6 +59,45 @@ export const createMessage = async (req, res) => {
       success: false,
       message: "Internal Server Error",
       error: err.message,
+    });
+  }
+};
+
+// GET /api/messages/:alumniId/getAllInvitations
+export const getAllInvitations = async (req, res) => {
+  const { alumniId } = req.params;
+
+  try {
+    // Fetch invitations for this alumni
+    const { data, error } = await supabase
+      .from("alumni_invitations")
+      .select(`
+        invitation_id,
+        event_id,
+        alumni_id,
+        created_at,
+        events (
+          event_id,
+          event_name,
+          event_description,
+          event_poster_key,
+          event_date_time,
+        )
+      `)
+      .eq("alumni_id", alumniId);
+
+    if (error) throw error;
+
+    res.status(200).json({
+      success: true,
+      invitations: data,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching invitations:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
