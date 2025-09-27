@@ -41,17 +41,32 @@ export const createMessage = async (req, res) => {
     }));
 
     // Insert all messages in a single batch
-    const { data, error } = await supabase
+    const { data: messagesData, error } = await supabase
       .from("admin_alumni_messages")
       .insert(messagesToInsert)
       .select();
 
     if (error) throw error;
 
+    // Prepare invitations data for alumni_invitations table
+    const invitationsToInsert = messagesData.map(message => ({
+      admin_alumni_message_id: message.admin_alumni_message_id || message.id,
+      event_id: message.event_id,
+      alumni_confirmation_status: 'PENDING',
+      alumni_response_message: null
+    }));
+
+    // Insert invitations in a single batch
+    const { error: invitationError } = await supabase
+      .from("alumni_invitations")
+      .insert(invitationsToInsert);
+
+    if (invitationError) throw invitationError;
+
     return res.status(201).json({
       success: true,
-      message: "Message created successfully",
-      data,
+      message: "Message and invitations created successfully",
+      data: messagesData,
     });
   } catch (err) {
     console.error("Error creating message:", err.message);
