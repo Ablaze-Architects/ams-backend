@@ -87,19 +87,20 @@ export const getAllInvitations = async (req, res) => {
     const { data, error } = await supabase
       .from("alumni_invitations")
       .select(`
-        invitation_id,
+        alumni_invitation_id,
         event_id,
-        alumni_id,
         created_at,
+        admin_alumni_messages!inner (
+          alumni_id
+        ),
         events (
-          event_id,
           event_name,
           event_description,
           event_poster_key,
-          event_date_time,
+          event_date_time
         )
       `)
-      .eq("alumni_id", alumniId);
+      .eq("admin_alumni_messages.alumni_id", alumniId);
 
     if (error) throw error;
 

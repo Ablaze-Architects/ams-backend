@@ -16,6 +16,7 @@
     - [Get All Events (`GET /api/events/:adminId/getAllEvents`)](#get-all-events)
   - [Messages](#messages)
     - [Create Message (`POST /api/messages/:adminId/createMessage`)](#create-message)
+    - [Get All Invitations (`GET /api/messages/:alumniId/getAllInvitations`)](#get-all-invitations)
 
 ## Database Connections
 
@@ -439,7 +440,7 @@ Send a message to one or more alumni. Optionally associate with an event.
 ```json
 {
   "success": true,
-  "message": "Message created successfully",
+  "message": "Message and invitations created successfully",
   "data": [
     {
       "id": "message-uuid-1",
@@ -462,6 +463,13 @@ Send a message to one or more alumni. Optionally associate with an event.
   ]
 }
 ```
+
+Notes:
+- Upon success, corresponding invitation rows are automatically created in `alumni_invitations` with:
+  - `admin_alumni_message_id` referencing each created message
+  - `event_id` copied from the message
+  - `alumni_confirmation_status` defaulted to `PENDING`
+  - `alumni_response_message` set to `null`
 
 **Error Responses:**
 - 400: Missing required fields
@@ -487,3 +495,38 @@ Send a message to one or more alumni. Optionally associate with an event.
     "error": "Error details here"
   }
   ```
+
+  ### Get All Invitations
+Retrieve all invitations for a specific alumni.
+
+- **Endpoint**: `GET /api/messages/:alumniId/getAllInvitations`
+- **Path Parameters**:
+  - `alumniId` (required): ID of the alumni
+
+**Success Response (200 OK):**
+```json
+{
+    "success": true,
+    "invitations": [
+        {
+            "alumni_invitation_id": 3,
+            "event_id": 2,
+            "created_at": "2025-09-27T16:00:17.342685",
+            "admin_alumni_messages": {
+                "alumni_id": "1a1d1321-212e-40c6-912a-1ea845d19a10"
+            },
+            "events": {
+                "event_name": "Alumni Meet 2023",
+                "event_date_time": "2023-12-31T14:30:00",
+                "event_poster_key": "path/to/poster.jpg",
+                "event_description": "Annual alumni gathering"
+            }
+        }
+    ]
+}
+```
+
+Notes:
+- The response includes a flat `alumni_id` field for convenience.
+- Internally, invitations are linked to messages via `admin_alumni_message_id`.
+- Ensure there is a related event with `event_id` for each invitation.
