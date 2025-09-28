@@ -18,9 +18,11 @@
   "homepage": "https://github.com/Ablaze-Architects/ams-backend#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "csv-parse": "^5.5.6",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "multer": "^1.4.5-lts.1",
     "pg": "^8.16.3",
     "uuid": "^13.0.0"
   },
