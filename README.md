@@ -11,6 +11,8 @@
     - [Logout (`POST /api/user/:userId/logout`)](#logout)
   - [Alumni](#alumni)
     - [Get All Alumni (`GET /api/alumni`)](#get-all-alumni)
+  - [Students](#students)
+    - [Create Students (`POST /api/students/createStudents`)](#create-students)
   - [Events](#events)
     - [Create Event (`POST /api/events/:adminId/createEvent`)](#create-event)
     - [Get All Events (`GET /api/events/:adminId/getAllEvents`)](#get-all-events)
@@ -298,6 +300,162 @@ Retrieve a list of all alumni with their social links.
     "message": "Server error fetching alumni"
   }
   ```
+
+### Students
+
+#### Create Students
+Bulk create student users from a JSON payload or a CSV file upload.
+
+- **Endpoint**: `POST /api/students/createStudents`
+
+**Content Types Supported:**
+- Application JSON: `application/json`
+- Multipart form-data (CSV upload): `multipart/form-data`
+
+**Request (JSON Option 1 - Array):**
+```json
+[
+  {
+    "student_name": "Jane Doe",
+    "student_email": "jane.doe@example.com",
+    "student_password": "StrongPass1",
+    "student_phone_number": "+1 555 000 1234",
+    "student_profile_picture_key": null,
+    "student_course": "B.Tech",
+    "student_branch": "CSE",
+    "student_current_year": 3,
+    "student_semester": 6,
+    "student_year_of_admission": 2022
+  }
+]
+```
+
+**Request (JSON Option 2 - Wrapped):**
+```json
+{
+  "students": [
+    {
+      "student_name": "Jane Doe",
+      "student_email": "jane.doe@example.com",
+      "student_password": "StrongPass1",
+      "student_phone_number": "+1 555 000 1234",
+      "student_profile_picture_key": null,
+      "student_course": "B.Tech",
+      "student_branch": "CSE",
+      "student_current_year": 3,
+      "student_semester": 6,
+      "student_year_of_admission": 2022
+    }
+  ]
+}
+```
+
+**Request (CSV via multipart/form-data):**
+- Field name: `file`
+- CSV must include a header row with columns matching the student fields below.
+
+Example CSV:
+```csv
+student_name,student_email,student_password,student_phone_number,student_profile_picture_key,student_course,student_branch,student_current_year,student_semester,student_year_of_admission
+Jane Doe,jane.doe@example.com,StrongPass1,+15550001234,,B.Tech,CSE,3,6,2022
+```
+
+**Per-Student Fields:**
+- `student_name` (string, required, non-empty)
+- `student_email` (string, required, valid email)
+- `student_password` (string, required, min 8 chars, must include upper, lower, digit)
+- `student_phone_number` (string, required, 7–15 digits allowed; may contain +, -, spaces, parentheses)
+- `student_profile_picture_key` (string, optional)
+- `student_course` (string, required, non-empty)
+- `student_branch` (string, required, non-empty)
+- `student_current_year` (integer, required, 1–8)
+- `student_semester` (integer, required, 1–16)
+- `student_year_of_admission` (integer, required, 1900–2100)
+
+Note: Passwords are used to create auth users but are NOT stored in the `students` table.
+
+**Success Response (201 Created, all succeeded):**
+```json
+{
+  "success": true,
+  "summary": { "total": 2, "succeeded": 2, "failed": 0 },
+  "results": [
+    { "index": 0, "success": true, "userId": "uuid-1", "student": { /* inserted row */ } },
+    { "index": 1, "success": true, "userId": "uuid-2", "student": { /* inserted row */ } }
+  ]
+}
+```
+
+**Partial Success Response (207 Multi-Status, some failed):**
+```json
+{
+  "success": false,
+  "summary": { "total": 2, "succeeded": 1, "failed": 1 },
+  "results": [
+    { "index": 0, "success": true, "userId": "uuid-1", "student": { /* inserted row */ } },
+    { "index": 1, "success": false, "error": "<validation or processing error>" }
+  ]
+}
+```
+
+**Error Responses:**
+- 400 Bad Request
+  - JSON path received but body is neither array nor object with `students` array:
+  ```json
+  {
+    "success": false,
+    "message": "Expected JSON array of students or object with 'students' array, or CSV via multipart/form-data"
+  }
+  ```
+  - Multipart path without a `file` upload:
+  ```json
+  {
+    "success": false,
+    "message": "CSV file missing. Upload using form-data with field name 'file'"
+  }
+  ```
+  - CSV parse error:
+  ```json
+  {
+    "success": false,
+    "message": "CSV parse error: <details>"
+  }
+  ```
+  - No records provided:
+  ```json
+  {
+    "success": false,
+    "message": "No student records provided"
+  }
+  ```
+  - All records failed validation/processing (no successes): returns 400 with the multi-record structure above.
+
+- 207 Multi-Status
+  - Mixed success/failure across records (at least one success and one failure).
+
+- 201 Created
+  - All records succeeded.
+
+- 500 Internal Server Error
+```json
+{
+  "success": false,
+  "message": "Internal server error"
+}
+```
+
+**Notes:**
+- Each record is sanitized and validated before processing.
+- Validation includes email format, password strength, numeric ranges, and phone number digit checks.
+- For each valid record:
+  - An auth user is created via Supabase Admin with metadata: `{ display_name: student_name, role: "STUDENT" }`.
+  - A row is inserted into the `students` table with `student_id = <auth user id>` and without storing the plaintext password.
+- Response includes a per-record `results` array with `index`, `success`, and either `{ userId, student }` on success or `{ error }` on failure.
+- Status code logic:
+  - 201 if all records succeeded
+  - 207 if some succeeded and some failed
+  - 400 if input is invalid or all records failed
+  - 500 for unexpected server errors
 
 ## Events
 
