@@ -328,8 +328,46 @@ const logout = async (req, res) => {
   }
 };
 
+// Get all invitations for a particular alumni
+const getAlumniInvitations = async (req, res) => {
+  const { alumniId } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("alumni_invitations")
+      .select(`
+        invitation_id,
+        event_id,
+        alumni_id,
+        created_at,
+        events (
+          event_id,
+          event_name,
+          event_date,
+          event_location
+        )
+      `)
+      .eq("alumni_id", alumniId);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      invitations: data,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching invitations:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
 module.exports = {
   signup,
   login,
-  logout
+  logout,
+  getAlumniInvitations
 };

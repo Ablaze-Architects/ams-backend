@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signup, login, logout } = require('../controller/userController');
+const { signup, login, logout, getAlumniInvitations  } = require('../controller/userController');
 
 // POST /api/user/signup
 router.post('/signup', signup);
@@ -10,5 +10,8 @@ router.post('/login', login);
 
 // POST /api/user/:userId/logout
 router.post('/:userId/logout', logout);
+
+//GET api for particular alumni
+router.get("/:alumniId/getAllInvitations", getAlumniInvitations);
 
 module.exports = router;
