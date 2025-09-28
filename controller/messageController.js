@@ -78,6 +78,87 @@ export const createMessage = async (req, res) => {
   }
 };
 
+// PATCH /api/messages/:alumniId/:eventId/updateInvitationStatus
+// Body: { alumni_confirmation_status: 'ACCEPTED' | 'REJECTED', alumni_response_message?: string }
+export const updateInvitationStatus = async (req, res) => {
+  const { alumniId, eventId } = req.params;
+  const { alumni_confirmation_status, alumni_response_message } = req.body || {};
+
+  try {
+    // Validate status
+    const allowed = ["ACCEPTED", "REJECTED"];
+    if (!alumni_confirmation_status || !allowed.includes(alumni_confirmation_status)) {
+      return res.status(400).json({
+        success: false,
+        message: "alumni_confirmation_status must be one of: ACCEPTED, REJECTED",
+      });
+    }
+
+    // 1) Check admin_alumni_messages for this alumniId
+    const { data: aams, error: aamsError } = await supabase
+      .from("admin_alumni_messages")
+      .select("admin_alumni_message_id, created_at")
+      .eq("alumni_id", alumniId)
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (aamsError) throw aamsError;
+    if (!aams || aams.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No message found for the given alumniId and eventId",
+      });
+    }
+
+    const adminAlumniMessageId = aams[0].admin_alumni_message_id;
+
+    // 2) Check alumni_invitations for that admin_alumni_message_id (and event)
+    const { data: invitations, error: invSelError } = await supabase
+      .from("alumni_invitations")
+      .select("alumni_invitation_id")
+      .eq("admin_alumni_message_id", adminAlumniMessageId)
+      .eq("event_id", eventId)
+      .limit(1);
+
+    if (invSelError) throw invSelError;
+    if (!invitations || invitations.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No invitation found for the given alumniId and eventId",
+      });
+    }
+
+    const alumniInvitationId = invitations[0].alumni_invitation_id;
+
+    // 3) Update invitation with new status and response
+    const { data: updated, error: updError } = await supabase
+      .from("alumni_invitations")
+      .update({
+        alumni_confirmation_status,
+        alumni_response_message: alumni_response_message ?? null,
+      })
+      .eq("alumni_invitation_id", alumniInvitationId)
+      .select()
+      .single();
+
+    if (updError) throw updError;
+
+    return res.status(200).json({
+      success: true,
+      message: "Invitation status updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error("Error updating invitation status:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
 // GET /api/messages/:alumniId/getAllInvitations
 export const getAllInvitations = async (req, res) => {
   const { alumniId } = req.params;

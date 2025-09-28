@@ -17,6 +17,7 @@
   - [Messages](#messages)
     - [Create Message (`POST /api/messages/:adminId/createMessage`)](#create-message)
     - [Get All Invitations (`GET /api/messages/:alumniId/getAllInvitations`)](#get-all-invitations)
+    - [Update Invitation Status (`PATCH /api/messages/:alumniId/:eventId/updateInvitationStatus`)](#update-invitation-status)
 
 ## Database Connections
 
@@ -526,7 +527,73 @@ Retrieve all invitations for a specific alumni.
 }
 ```
 
-Notes:
-- The response includes a flat `alumni_id` field for convenience.
-- Internally, invitations are linked to messages via `admin_alumni_message_id`.
-- Ensure there is a related event with `event_id` for each invitation.
+### Update Invitation Status
+
+Update an invitation's status for a specific alumni and event.
+
+- **Endpoint**: `PATCH /api/messages/:alumniId/:eventId/updateInvitationStatus`
+- **Path Parameters**:
+  - `alumniId` (required): ID of the alumni responding
+  - `eventId` (required): ID of the event
+- **Request Body**:
+  ```json
+  {
+    "alumni_confirmation_status": "ACCEPTED",
+    "alumni_response_message": "Looking forward to it!"
+  }
+  ```
+  - `alumni_confirmation_status` (required, enum): Must be one of `ACCEPTED`, `REJECTED`
+  - `alumni_response_message` (optional, string): Additional response message from the alumni
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Invitation status updated successfully",
+  "data": {
+    "alumni_invitation_id": 3,
+    "admin_alumni_message_id": 12,
+    "event_id": 2,
+    "alumni_confirmation_status": "ACCEPTED",
+    "alumni_response_message": "Looking forward to it!",
+    "created_at": "2025-09-27T16:00:17.342685"
+  }
+}
+```
+
+**Enums**
+- `alumni_confirmation_status` accepts only the following UPPERCASE values:
+  - `ACCEPTED`
+  - `REJECTED`
+- Any other value (including lowercase variants) will be rejected with HTTP 400.
+- When invitations are created via `POST /api/messages/:adminId/createMessage`, they start as `PENDING` internally. This PATCH endpoint transitions the status to either `ACCEPTED` or `REJECTED`.
+
+**Error Responses:**
+- 400: Invalid or missing fields
+  ```json
+  {
+    "success": false,
+    "message": "alumni_confirmation_status must be one of: ACCEPTED, REJECTED"
+  }
+  ```
+- 404: Not found
+  ```json
+  {
+    "success": false,
+    "message": "No message found for the given alumniId and eventId"
+  }
+  ```
+  OR
+  ```json
+  {
+    "success": false,
+    "message": "No invitation found for the given alumniId and eventId"
+  }
+  ```
+- 500: Internal server error
+  ```json
+  {
+    "success": false,
+    "message": "Internal Server Error"
+  }
+  ```
