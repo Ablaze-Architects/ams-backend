@@ -355,10 +355,7 @@ const getAlumniById = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      data,
-    });
+    res.status(200).json(data);
   } catch (err) {
     console.error("Error in getAlumniById:", err);
     res.status(500).json({
