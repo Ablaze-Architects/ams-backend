@@ -246,3 +246,25 @@ export const createStudents = async (req, res) => {
   }
 };
 
+// GET all students
+export const getAllStudents = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("students")  // 👈 table name in DB
+      .select("*");
+
+    if (error) throw error;
+
+    res.status(200).json({
+      success: true,
+      students: data,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching students:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
