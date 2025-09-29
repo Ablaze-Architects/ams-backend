@@ -31,6 +31,24 @@ export const createMessage = async (req, res) => {
       });
     }
 
+    // Check for duplicate invitations for the same event and alumni
+    const { data: existingMessages, error: existingError } = await supabase
+      .from("admin_alumni_messages")
+      .select("alumni_id")
+      .eq("event_id", event_id)
+      .in("alumni_id", alumni_ids);
+
+    if (existingError) throw existingError;
+
+    const duplicateAlumniIds = Array.from(new Set((existingMessages || []).map((r) => r.alumni_id)));
+    if (duplicateAlumniIds.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "One or more alumni already have an invitation for this event",
+        duplicates: duplicateAlumniIds,
+      });
+    }
+
     // Prepare messages for all alumni
     const messagesToInsert = alumni_ids.map(alumni_id => ({
       admin_id: adminId,

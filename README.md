@@ -574,7 +574,7 @@ Retrieve all events with admin details. Only accessible by authenticated admins.
 ## Messages
 
 ### Create Message
-Send a message to one or more alumni. Optionally associate with an event.
+Send a message to one or more alumni and associate it with an event. The API prevents sending duplicate invitations for the same event to the same alumni and will return HTTP 409 with a list of duplicate alumni IDs.
 
 **Endpoint:** `POST /api/messages/:adminId/createMessage`
 
@@ -643,6 +643,18 @@ Notes:
   {
     "success": false,
     "message": "At least one alumni_id is required"
+  }
+  ```
+
+- 409: Duplicate invitations (one or more alumni already have an invitation for this event)
+  ```json
+  {
+    "success": false,
+    "message": "One or more alumni already have an invitation for this event",
+    "duplicates": [
+      "alumni-uuid-1",
+      "alumni-uuid-2"
+    ]
   }
   ```
 
