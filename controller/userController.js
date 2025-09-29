@@ -328,46 +328,10 @@ const logout = async (req, res) => {
   }
 };
 
-// GET Alumni by ID
-const getAlumniById = async (req, res) => {
-  try {
-    const { alumniId } = req.params;
 
-    if (!alumniId) {
-      return res.status(400).json({
-        success: false,
-        message: "Alumni ID is required",
-      });
-    }
-
-    // Fetch alumni from DB
-    const { data, error } = await supabase
-      .from("alumni")
-      .select("*")
-      .eq("alumni_id", alumniId)
-      .single();
-
-    if (error || !data) {
-      return res.status(404).json({
-        success: false,
-        message: "Alumni not found",
-        error: error?.message,
-      });
-    }
-
-    res.status(200).json(data);
-  } catch (err) {
-    console.error("Error in getAlumniById:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
 
 module.exports = {
   signup,
   login,
-  logout,
-  getAlumniById
+  logout
 };
