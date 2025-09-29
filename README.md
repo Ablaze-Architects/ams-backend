@@ -11,8 +11,10 @@
     - [Logout (`POST /api/user/:userId/logout`)](#logout)
   - [Alumni](#alumni)
     - [Get All Alumni (`GET /api/alumni`)](#get-all-alumni)
+    - [Get Alumni By ID (`GET /api/alumni/:alumniId`)](#get-alumni-by-id)
   - [Students](#students)
     - [Create Students (`POST /api/students/createStudents`)](#create-students)
+    - [Get All Students (`GET /api/students/getAllStudents`)](#get-all-students)
   - [Events](#events)
     - [Create Event (`POST /api/events/:adminId/createEvent`)](#create-event)
     - [Get All Events (`GET /api/events/:adminId/getAllEvents`)](#get-all-events)
@@ -301,6 +303,47 @@ Retrieve a list of all alumni with their social links.
   }
   ```
 
+#### Get Alumni By ID
+Retrieve a single alumni record by `alumniId` including their social links.
+
+- **Endpoint**: `GET /api/alumni/:alumniId`
+- **Path Parameters**:
+  - `alumniId` (required): ID of the alumni to fetch
+- **Success Response (200 OK):**
+  ```json
+  {
+    "alumni_id": "6bd83c54-9231-422c-905a-1f80daeecb9e",
+    "alumni_name": "John Doe",
+    "alumni_course": "Computer Science",
+    "alumni_stream": "B.Tech",
+    "alumni_occupation": "Software Engineer",
+    "alumni_year_of_graduation": "2020",
+    "alumni_profile_picture_key": null,
+    "alumni_email": "john.doe1212@example.com",
+    "alumni_phone_no": 1234567890,
+    "alumni_created_at": "2025-09-14T18:37:24.299292+00:00",
+    "alumni_updated_at": "2025-09-14T18:37:24.299292+00:00",
+    "social_links": [
+      { "alumni_link": "https://linkedin.com/in/johndoe", "alumni_link_name": "LINKEDIN" }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - 404 Not Found
+  ```json
+  {
+    "success": false,
+    "message": "Alumni not found"
+  }
+  ```
+  - 500 Internal Server Error
+  ```json
+  {
+    "success": false,
+    "message": "Server error fetching alumni by ID"
+  }
+  ```
+
 ### Students
 
 #### Create Students
@@ -456,6 +499,41 @@ Note: Passwords are used to create auth users but are NOT stored in the `student
   - 207 if some succeeded and some failed
   - 400 if input is invalid or all records failed
   - 500 for unexpected server errors
+
+#### Get All Students
+Retrieve all students from the `students` table.
+
+- **Endpoint**: `GET /api/students/getAllStudents`
+- **Success Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "students": [
+      {
+        "student_id": "uuid-here",
+        "student_name": "Jane Doe",
+        "student_email": "jane.doe@example.com",
+        "student_phone_number": "+1 555 000 1234",
+        "student_profile_picture_key": null,
+        "student_course": "B.Tech",
+        "student_branch": "CSE",
+        "student_current_year": 3,
+        "student_semester": 6,
+        "student_year_of_admission": 2022,
+        "created_at": "2025-09-27T16:00:17.342685",
+        "updated_at": "2025-09-27T16:00:17.342685"
+      }
+    ]
+  }
+  ```
+- **Error Responses**:
+  - 500 Internal Server Error
+  ```json
+  {
+    "success": false,
+    "message": "Internal Server Error"
+  }
+  ```
 
 ## Events
 
