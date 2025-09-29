@@ -11,7 +11,4 @@ router.post('/login', login);
 // POST /api/user/:userId/logout
 router.post('/:userId/logout', logout);
 
-//GET api for particular alumni
-router.get("/:alumniId", getAlumniById);
-
 module.exports = router;
