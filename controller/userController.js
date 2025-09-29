@@ -328,39 +328,42 @@ const logout = async (req, res) => {
   }
 };
 
-// Get all invitations for a particular alumni
-const getAlumniInvitations = async (req, res) => {
-  const { alumniId } = req.params;
-
+// GET Alumni by ID
+const getAlumniById = async (req, res) => {
   try {
+    const { alumniId } = req.params;
+
+    if (!alumniId) {
+      return res.status(400).json({
+        success: false,
+        message: "Alumni ID is required",
+      });
+    }
+
+    // Fetch alumni from DB
     const { data, error } = await supabase
-      .from("alumni_invitations")
-      .select(`
-        invitation_id,
-        event_id,
-        alumni_id,
-        created_at,
-        events (
-          event_id,
-          event_name,
-          event_date,
-          event_location
-        )
-      `)
-      .eq("alumni_id", alumniId);
+      .from("alumni")
+      .select("*")
+      .eq("alumni_id", alumniId)
+      .single();
 
-    if (error) throw error;
+    if (error || !data) {
+      return res.status(404).json({
+        success: false,
+        message: "Alumni not found",
+        error: error?.message,
+      });
+    }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      invitations: data,
+      data,
     });
   } catch (err) {
-    console.error("❌ Error fetching invitations:", err.message);
+    console.error("Error in getAlumniById:", err);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
-      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      message: "Internal server error",
     });
   }
 };
@@ -369,5 +372,5 @@ module.exports = {
   signup,
   login,
   logout,
-  getAlumniInvitations
+  getAlumniById
 };
