@@ -21,12 +21,14 @@
   - [Messages](#messages)
     - [Create Message (`POST /api/messages/:adminId/createMessage`)](#create-message)
     - [Get All Invitations (`GET /api/messages/:alumniId/getAllInvitations`)](#get-all-invitations)
+    - [Get Invitations (`GET /api/messages/invitations`)](#get-invitations)
     - [Update Invitation Status (`PATCH /api/messages/:alumniId/:eventId/updateInvitationStatus`)](#update-invitation-status)
 
 ## Database Connections
 
 ### PostgreSQL
 - Connection configured via environment variables in `.env` file
+{{ ... }}
 - Required environment variables:
   - `PGHOST` - Database host
   - `PGPORT` - Database port
@@ -102,6 +104,47 @@ Create a new user account with either ADMIN or ALUMNI role.
   "role": "ADMIN"
 }
 ```
+
+### Get Invitations
+Retrieve all invitations across all alumni with event details. This endpoint returns an array of invitation objects.
+
+- **Endpoint**: `GET /api/messages/invitations`
+
+**Business Logic:**
+- **[Select]** From `alumni_invitations` with joins to gather related data.
+- **[Join]** `admin_alumni_messages` (inner) to include `alumni_id`.
+- **[Join]** `events` to include event metadata: `event_name`, `event_description`, `event_poster_key`, `event_date_time`.
+- **[Return]** An array of invitation objects. No filtering or pagination is applied by default.
+
+**Success Response (200 OK):**
+Array of invitation objects:
+```json
+[
+  {
+    "alumni_invitation_id": 1,
+    "event_id": 2,
+    "created_at": "2025-09-27T16:00:17.342685",
+    "admin_alumni_messages": { "alumni_id": "uuid-here" },
+    "events": {
+      "event_name": "Alumni Meet 2023",
+      "event_date_time": "2023-12-31T14:30:00",
+      "event_poster_key": "path/to/poster.jpg",
+      "event_description": "Annual alumni gathering"
+    }
+  }
+]
+```
+
+**Error Responses:**
+- 500 Internal Server Error
+```json
+{
+  "success": false,
+  "message": "Internal Server Error"
+}
+```
+
+ 
 
 **Request Body (ALUMNI):**
 ```json
@@ -745,14 +788,14 @@ Notes:
   }
   ```
 
-  ### Get All Invitations
+## Messages
+
+### Get All Invitations
 Retrieve all invitations for a specific alumni.
 
 - **Endpoint**: `GET /api/messages/:alumniId/getAllInvitations`
 - **Path Parameters**:
   - `alumniId` (required): ID of the alumni
-
-**Success Response (200 OK):**
 ```json
 {
     "success": true,
