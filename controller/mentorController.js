@@ -69,3 +69,26 @@ export const createMentor = async (req, res) => {
     });
   }
 };
+
+// GET /api/mentor/getAllMentors
+// Returns an array of mentors
+export const getAllMentors = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("mentors")
+      .select("*")
+      .order("mentor_name", { ascending: true });
+
+    if (error) throw error;
+
+    // Return array directly
+    return res.status(200).json(data || []);
+  } catch (err) {
+    console.error("❌ Error fetching mentors:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
