@@ -216,3 +216,37 @@ export const getAllInvitations = async (req, res) => {
     });
   }
 };
+
+// GET /api/messages/invitations
+// Returns an array of invitations with specified fields
+export const getInvitations = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("alumni_invitations")
+      .select(`
+        alumni_invitation_id,
+        event_id,
+        created_at,
+        admin_alumni_messages!inner (
+          alumni_id
+        ),
+        events (
+          event_name,
+          event_description,
+          event_poster_key,
+          event_date_time
+        )
+      `);
+
+    if (error) throw error;
+
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("❌ Error fetching all invitations:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};

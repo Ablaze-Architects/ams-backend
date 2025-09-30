@@ -1,5 +1,5 @@
 import express from "express";
-import { createMessage, getAllInvitations, updateInvitationStatus } from "../controller/messageController.js";
+import { createMessage, getAllInvitations, updateInvitationStatus, getInvitations } from "../controller/messageController.js";
 
 const router = express.Router();
 
@@ -9,7 +9,9 @@ router.post("/:adminId/createMessage", createMessage);
 // GET /api/messages/:alumniId/getAllInvitations
 router.get("/:alumniId/getAllInvitations", getAllInvitations);
 
-// PATCH /api/messages/:alumniId/:eventId/updateInvitationStatus
+router.get("/invitations", getInvitations);
+
+// PATCH /api/messages/:alumniId/: eventId/updateInvitationStatus
 router.patch("/:alumniId/:eventId/updateInvitationStatus", updateInvitationStatus);
 
 export default router;
