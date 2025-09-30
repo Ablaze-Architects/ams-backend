@@ -23,6 +23,9 @@
     - [Get All Invitations (`GET /api/messages/:alumniId/getAllInvitations`)](#get-all-invitations)
     - [Get Invitations (`GET /api/messages/invitations`)](#get-invitations)
     - [Update Invitation Status (`PATCH /api/messages/:alumniId/:eventId/updateInvitationStatus`)](#update-invitation-status)
+  - [Mentors](#mentors)
+    - [Create Mentor (`POST /api/mentor/:alumniId/createMentor`)](#create-mentor)
+    - [Get All Mentors (`GET /api/mentor/getAllMentors`)](#get-all-mentors)
 
 ## Database Connections
 
@@ -577,6 +580,107 @@ Retrieve all students from the `students` table.
     "message": "Internal Server Error"
   }
   ```
+
+## Mentors
+
+### Create Mentor
+Create a mentor entry associated with an alumni.
+
+- **Endpoint:** `POST /api/mentor/:alumniId/createMentor`
+- **Path Parameters:**
+  - `alumniId` (required): UUID of the alumni to associate as mentor owner
+- **Request Body:**
+  ```json
+  {
+    "mentor_name": "Jane Mentor",
+    "mentor_description": "Industry veteran in cloud computing",
+    "mentor_occupation": "Principal Engineer",
+    "mentor_email": "jane.mentor@example.com",
+    "mentor_phone_number": "+1 555 111 2222"
+  }
+  ```
+  - `mentor_name` (required, string)
+  - `mentor_description` (optional, string)
+  - `mentor_occupation` (required, string)
+  - `mentor_email` (required, string, valid email format)
+  - `mentor_phone_number` (optional, string)
+
+**Business Logic:**
+- Validates required fields and email format.
+- Inserts into `mentors` with fields:
+  - `alumni_id` from URL param `alumniId`
+  - `mentor_name`, `mentor_description`, `mentor_occupation`, `mentor_email`, `mentor_phone_number`
+
+**Success Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Mentor created successfully",
+  "data": {
+    "alumni_id": "uuid-here",
+    "mentor_name": "Jane Mentor",
+    "mentor_description": "Industry veteran in cloud computing",
+    "mentor_occupation": "Principal Engineer",
+    "mentor_email": "jane.mentor@example.com",
+    "mentor_phone_number": "+1 555 111 2222"
+  }
+}
+```
+
+**Error Responses:**
+- 400 Bad Request
+  ```json
+  {
+    "success": false,
+    "message": "Missing required field(s): mentor_name, mentor_occupation, mentor_email"
+  }
+  ```
+- 400 Bad Request (invalid email)
+  ```json
+  {
+    "success": false,
+    "message": "mentor_email is not a valid email"
+  }
+  ```
+- 500 Internal Server Error
+  ```json
+  {
+    "success": false,
+    "message": "Internal Server Error"
+  }
+  ```
+
+### Get All Mentors
+Retrieve all mentors. Returns an array (no wrapper).
+
+- **Endpoint:** `GET /api/mentor/getAllMentors`
+
+**Business Logic:**
+- Selects all rows from `mentors` and orders by `mentor_name` ascending.
+- Returns the array directly.
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "alumni_id": "uuid-here",
+    "mentor_name": "Jane Mentor",
+    "mentor_description": "Industry veteran in cloud computing",
+    "mentor_occupation": "Principal Engineer",
+    "mentor_email": "jane.mentor@example.com",
+    "mentor_phone_number": "+1 555 111 2222"
+  }
+]
+```
+
+**Error Responses:**
+- 500 Internal Server Error
+```json
+{
+  "success": false,
+  "message": "Internal Server Error"
+}
+```
 
 ## Events
 
