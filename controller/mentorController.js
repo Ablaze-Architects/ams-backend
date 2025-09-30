@@ -92,3 +92,44 @@ export const getAllMentors = async (req, res) => {
     });
   }
 };
+
+// GET /api/mentor/:mentorId
+// Returns a single mentor object by ID
+export const getMentorById = async (req, res) => {
+  const { mentorId } = req.params;
+  try {
+    if (!mentorId) {
+      return res.status(400).json({
+        success: false,
+        message: "mentorId is required",
+      });
+    }
+
+    // Query by mentor_id
+    const { data, error } = await supabase
+      .from("mentors")
+      .select("*")
+      .eq("mentor_id", mentorId)
+      .limit(1)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error; // PGRST116 = No rows
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: "Mentor not found",
+      });
+    }
+
+    // Return the single object directly
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("❌ Error fetching mentor by id:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
